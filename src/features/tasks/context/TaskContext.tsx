@@ -1,4 +1,4 @@
-import React, { use, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { Task, TaskStatus, SortOption } from 'shared/types'
 import {
   createTask,
@@ -16,15 +16,18 @@ interface TaskProviderType {
   status: { pending: number, completed: number },
   initialized: boolean,
   page: number,
+  error: string | null,
+  loading: boolean,
   initialize: (tasks: Task[]) => void,
   setFilter: (filter: string) => void,
   setSort: (sort: string) => void,
   setSearch: (search: string) => void,
-  addTask: (task: Task) => void,
-  editTask: (task: Task) => void,
-  deleteTask: (task: Task) => void,
-  prevPage: () => void,
-  nextPage: () => void,
+  addTask: (task: Task) => Promise<void>,
+  editTask: (task: Task) => Promise<void>,
+  deleteTask: (task: Task) => Promise<void>,
+  prevPage: () => Promise<void>,
+  nextPage: () => Promise<void>,
+  clearError: () => void,
 }
 
 const TaskContext = React.createContext<TaskProviderType>({
@@ -35,15 +38,18 @@ const TaskContext = React.createContext<TaskProviderType>({
   initialized: false,
   page: 1,
   status: { pending: 0, completed: 0 },
+  error: null,
+  loading: false,
   initialize: () => null,
   setFilter: () => null,
   setSort: () => null,
   setSearch: () => null,
-  addTask: () => null,
-  editTask: () => null,
-  deleteTask: () => null,
-  prevPage: () => null,
-  nextPage: () => null,
+  addTask: async () => {},
+  editTask: async () => {},
+  deleteTask: async () => {},
+  prevPage: async () => {},
+  nextPage: async () => {},
+  clearError: () => null,
 })
 
 const TaskProvider: React.FC<{ children: React.ReactNode }> = ({
@@ -55,6 +61,8 @@ const TaskProvider: React.FC<{ children: React.ReactNode }> = ({
   const [tasks, setTasks] = useState<Task[]>([])
   const [initialized, setInitialized] = useState<boolean>(false)
   const [page, setPage] = useState<number>(1)
+  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState<boolean>(false)
 
   const initialize = useCallback((data: Task[]) => {
     setTasks(data)
@@ -62,39 +70,83 @@ const TaskProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [])
 
   const addTask = useCallback(async (task: Task) => {
-    const res = await createTask(task)
-    if (res) {
-      setTasks((prev) => [...prev, res])
+    try {
+      setLoading(true)
+      setError(null)
+      const res = await createTask(task)
+      if (res) {
+        setTasks((prev) => [...prev, res])
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create task')
+    } finally {
+      setLoading(false)
     }
   }, [])
 
   const prevPage = useCallback(async () => {
     if (page > 1) {
-      const res = await getTasksWithOptions({ page: page - 1 })
-      setTasks(res)
-      setPage(page - 1)
+      try {
+        setLoading(true)
+        setError(null)
+        const res = await getTasksWithOptions({ page: page - 1 })
+        setTasks(res)
+        setPage(page - 1)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load previous page')
+      } finally {
+        setLoading(false)
+      }
     }
   }, [page])
 
   const nextPage = useCallback(async () => {
     if (tasks.length < 10) return
-    const res = await getTasksWithOptions({ page: page + 1 })
-    if (res.length > 0) {
-      setTasks(res)
-      setPage(page + 1)
+    try {
+      setLoading(true)
+      setError(null)
+      const res = await getTasksWithOptions({ page: page + 1 })
+      if (res.length > 0) {
+        setTasks(res)
+        setPage(page + 1)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to load next page')
+    } finally {
+      setLoading(false)
     }
   }, [page, tasks])
   
   const editTask = useCallback(async (task: Task) => {
-    const res = await updateTask(task.id, task)
-    if (res) {
-      setTasks((prev) => prev.map((t) => (t.id === res.id ? res : t)))
+    try {
+      setLoading(true)
+      setError(null)
+      const res = await updateTask(task.id, task)
+      if (res) {
+        setTasks((prev) => prev.map((t) => (t.id === res.id ? res : t)))
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update task')
+    } finally {
+      setLoading(false)
     }
   }, [])
 
   const deleteTask = useCallback(async (task: Task) => {
-    await deleteTaskAPI(task.id)
-    setTasks((prev) => prev.filter((t) => t.id !== task.id))
+    try {
+      setLoading(true)
+      setError(null)
+      await deleteTaskAPI(task.id)
+      setTasks((prev) => prev.filter((t) => t.id !== task.id))
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete task')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const clearError = useCallback(() => {
+    setError(null)
   }, [])
 
   const status = useMemo(() => {
@@ -130,6 +182,8 @@ const TaskProvider: React.FC<{ children: React.ReactNode }> = ({
         tasks: filteredTasks,
         search,
         page,
+        error,
+        loading,
         initialize,
         setFilter,
         setSort,
@@ -139,6 +193,7 @@ const TaskProvider: React.FC<{ children: React.ReactNode }> = ({
         setSearch,
         prevPage,
         nextPage,
+        clearError,
       }}
     >
       {children}

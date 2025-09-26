@@ -1,13 +1,6 @@
 {
   "tasks": [
     {
-      "title": "Task 1",
-      "description": "new updated description for task 11",
-      "status": "Completed",
-      "date": "2025-09-26T01:24:49.797Z",
-      "id": 1
-    },
-    {
       "id": 2,
       "title": "Task 2",
       "description": "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.",
@@ -48,13 +41,6 @@
       "description": "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.",
       "status": "Pending",
       "date": "2023-09-05"
-    },
-    {
-      "title": "Task 8",
-      "description": "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged.",
-      "status": "Completed",
-      "date": "2023-09-08T00:55:30.416Z",
-      "id": 8
     },
     {
       "id": 9,

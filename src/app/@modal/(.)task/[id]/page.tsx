@@ -16,7 +16,8 @@ async function getTask(taskId: string) {
 }
 
 export default async function AddTaskModal({ params }: Props) {
-  const task = await getTask(params.id)
+  const resolvedParams = await params
+  const task = await getTask(resolvedParams.id)
   return (
     <Modal>
       <div className="w-full min-h-[320px] bg-white rounded-lg p-4 dark:bg-slate-800">

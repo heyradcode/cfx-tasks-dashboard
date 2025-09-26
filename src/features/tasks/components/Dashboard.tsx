@@ -24,7 +24,10 @@ export default function Dashboard({ data }: Props) {
     nextPage,
     setSearch,
     setFilter,
-    setSort
+    setSort,
+    error,
+    loading,
+    clearError
   } = useTaskContenxt()
   const [viewMode, setViewMode] = useState<ViewMode>(ViewMode.GRID)
 
@@ -68,12 +71,34 @@ export default function Dashboard({ data }: Props) {
         filter={filter}
         sort={sort ?? 'asc'}
       />
-      <div className={classNames("grid gap-4", {
-        "grid-cols-1": viewMode === ViewMode.LIST,
-        "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4": viewMode === ViewMode.GRID,
-      })}>
-        {tasks.map(renderTaskItem)}
-      </div>
+      
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+            <button
+              onClick={clearError}
+              className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      ) : (
+        <div className={classNames("grid gap-4", {
+          "grid-cols-1": viewMode === ViewMode.LIST,
+          "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4": viewMode === ViewMode.GRID,
+        })}>
+          {tasks.map(renderTaskItem)}
+        </div>
+      )}
+      
       <PaginatonFooter
         page={page}
         prevPage={prevPage}
